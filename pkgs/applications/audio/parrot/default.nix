@@ -12,17 +12,16 @@
 , yt-dlp
 , Security
 }:
-let
-  version = "1.6.0";
-in
-rustPlatform.buildRustPackage {
+
+rustPlatform.buildRustPackage (finalAttrs: {
   pname = "parrot";
-  inherit version;
+
+  version = "1.6.0";
 
   src = fetchFromGitHub {
     owner = "aquelemiguel";
     repo = "parrot";
-    rev = "v${version}";
+    rev = "v${finalAttrs.version}";
     hash = "sha256-f6YAdsq2ecsOCvk+A8wsUu+ywQnW//gCAkVLF0HTn8c=";
   };
 
@@ -47,4 +46,4 @@ rustPlatform.buildRustPackage {
     maintainers = with lib.maintainers; [ gerg-l ];
     mainProgram = "parrot";
   };
-}
+})

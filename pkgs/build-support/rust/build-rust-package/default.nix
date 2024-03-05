@@ -1,7 +1,8 @@
 { lib
 , importCargoLock
 , fetchCargoTarball
-, stdenv
+, stdenvNonExtensible
+, stdenv ? stdenvNonExtensible
 , callPackage
 , cargoBuildHook
 , cargoCheckHook
@@ -15,6 +16,8 @@
 , libiconv
 , windows
 }:
+
+lib.makeDerivationExtensible (overrideAttrs:
 
 { name ? "${args.pname}-${args.version}"
 
@@ -95,7 +98,7 @@ in
 # See https://os.phil-opp.com/testing/ for more information.
 assert useSysroot -> !(args.doCheck or true);
 
-stdenv.mkDerivation ((removeAttrs args [ "depsExtraArgs" "cargoUpdateHook" "cargoLock" ]) // lib.optionalAttrs useSysroot {
+stdenvNonExtensible.mkDerivation ((removeAttrs args [ "depsExtraArgs" "cargoUpdateHook" "cargoLock" ]) // lib.optionalAttrs useSysroot {
   RUSTFLAGS = "--sysroot ${sysroot} " + (args.RUSTFLAGS or "");
 } // {
   inherit buildAndTestSubdir cargoDeps;
@@ -150,6 +153,10 @@ stdenv.mkDerivation ((removeAttrs args [ "depsExtraArgs" "cargoUpdateHook" "carg
 
   strictDeps = true;
 
+  passthru = args.passthru or {} // {
+   inherit overrideAttrs;
+  };
+
   meta = {
     # default to Rust's platforms
     platforms = rustc.meta.platforms ++ [
@@ -167,4 +174,4 @@ stdenv.mkDerivation ((removeAttrs args [ "depsExtraArgs" "cargoUpdateHook" "carg
       lib.systems.inspect.patterns.isMips64n32
     ];
   } // meta;
-})
+}))

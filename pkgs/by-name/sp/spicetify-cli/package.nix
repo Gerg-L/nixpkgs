@@ -1,13 +1,13 @@
 { lib, buildGoModule, fetchFromGitHub, testers, spicetify-cli }:
 
-buildGoModule rec {
+buildGoModule (finalAttrs: {
   pname = "spicetify-cli";
   version = "2.33.1";
 
   src = fetchFromGitHub {
     owner = "spicetify";
     repo = "spicetify-cli";
-    rev = "v${version}";
+    rev = "v${finalAttrs.version}";
     hash = "sha256-nKbdwgxHiI1N2REEI7WrPf54uy4Nm1XU0g5hEjYriEY=";
   };
 
@@ -15,15 +15,15 @@ buildGoModule rec {
 
   ldflags = [
     "-s -w"
-    "-X 'main.version=${version}'"
+    "-X 'main.version=${finalAttrs.version}'"
   ];
 
   # used at runtime, but not installed by default
   postInstall = ''
-    cp -r ${src}/jsHelper $out/bin/jsHelper
-    cp -r ${src}/CustomApps $out/bin/CustomApps
-    cp -r ${src}/Extensions $out/bin/Extensions
-    cp -r ${src}/Themes $out/bin/Themes
+    cp -r ${finalAttrs.src}/jsHelper $out/bin/jsHelper
+    cp -r ${finalAttrs.src}/CustomApps $out/bin/CustomApps
+    cp -r ${finalAttrs.src}/Extensions $out/bin/Extensions
+    cp -r ${finalAttrs.src}/Themes $out/bin/Themes
   '';
 
   doInstallCheck = true;
@@ -43,4 +43,4 @@ buildGoModule rec {
     maintainers = with maintainers; [ jonringer mdarocha ];
     mainProgram = "spicetify-cli";
   };
-}
+})

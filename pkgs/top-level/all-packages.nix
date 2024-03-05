@@ -44,6 +44,17 @@ with pkgs;
     }
   );
 
+  stdenvNonExtensible = stdenv.override {
+    mkDerivationFromStdenv = import ../stdenv/generic/make-derivation.nix {
+      inherit lib;
+      config = config // {
+        stdenv = (config.stdenv or {}) // {
+          makeExtensible = false;
+          };
+        };
+      };
+  };
+
   mkStdenvNoLibs = stdenv: let
     bintools = stdenv.cc.bintools.override {
       libc = null;

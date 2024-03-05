@@ -1,5 +1,9 @@
-{ go, cacert, git, lib, stdenv }:
-
+{ go, cacert, git, lib
+, stdenvNonExtensible
+, stdenv ? stdenvNonExtensible
+, pkgs
+ }:
+lib.makeDerivationExtensible (overrideAttrs:
 { name ? "${args'.pname}-${args'.version}"
 , src
 , nativeBuildInputs ? [ ]
@@ -58,7 +62,7 @@ let
   GOTOOLCHAIN = "local";
 
   goModules = if (vendorHash == null) then "" else
-  (stdenv.mkDerivation {
+  (pkgs.stdenv.mkDerivation {
     name = "${name}-go-modules";
 
     nativeBuildInputs = (args.nativeBuildInputs or [ ]) ++ [ go git cacert ];
@@ -148,7 +152,7 @@ let
     outputHashAlgo = if args' ? vendorSha256 || vendorHash == "" then "sha256" else null;
   }).overrideAttrs overrideModAttrs;
 
-  package = stdenv.mkDerivation (args // {
+  package = stdenvNonExtensible.mkDerivation (args // {
     nativeBuildInputs = [ go ] ++ nativeBuildInputs;
 
     inherit (go) GOOS GOARCH;
@@ -294,7 +298,7 @@ let
 
     disallowedReferences = lib.optional (!allowGoReference) go;
 
-    passthru = passthru // { inherit go goModules vendorHash; }
+    passthru = passthru // { inherit go goModules vendorHash overrideAttrs; }
                         // lib.optionalAttrs (args' ? vendorSha256 ) { inherit (args') vendorSha256; };
 
     meta = {
@@ -307,4 +311,4 @@ lib.warnIf (args' ? vendorSha256) "`vendorSha256` is deprecated. Use `vendorHash
 lib.warnIf (buildFlags != "" || buildFlagsArray != "")
   "Use the `ldflags` and/or `tags` attributes instead of `buildFlags`/`buildFlagsArray`"
 lib.warnIf (builtins.elem "-buildid=" ldflags) "`-buildid=` is set by default as ldflag by buildGoModule"
-  package
+  package)

@@ -306,4 +306,68 @@ rec {
     fix' (self: (rattrs self) // {
       ${extenderName} = f: makeExtensibleWithCustomName extenderName (extends f rattrs);
     });
+
+  makeDerivationExtensible = drv:
+  let
+  # Based off lib.makeExtensible, with modifications:
+  foo = rattrs:
+    let
+      # NOTE: The following is a hint that will be printed by the Nix cli when
+      # encountering an infinite recursion. It must not be formatted into
+      # separate lines, because Nix would only show the last line of the comment.
+
+      # An infinite recursion here can be caused by having the attribute names of expression `e` in `.overrideAttrs(finalAttrs: previousAttrs: e)` depend on `finalAttrs`. Only the attribute values of `e` can depend on `finalAttrs`.
+      args = rattrs (args // { inherit finalPackage overrideAttrs; });
+      #              ^^^^
+
+      overrideAttrs = f0:
+        let
+          f = self: super:
+            # Convert f0 to an overlay. Legacy is:
+            #   overrideAttrs (super: {})
+            # We want to introduce self. We follow the convention of overlays:
+            #   overrideAttrs (self: super: {})
+            # Which means the first parameter can be either self or super.
+            # This is surprising, but far better than the confusion that would
+            # arise from flipping an overlay's parameters in some cases.
+            let x = f0 super;
+            in
+              if builtins.isFunction x
+              then
+                # Can't reuse `x`, because `self` comes first.
+                # Looks inefficient, but `f0 super` was a cheap thunk.
+                f0 self super
+              else x;
+        in
+            foo
+            (self: let super = rattrs self; in super // (if builtins.isFunction f0 || f0?__functor then f self super else f0));
+
+      finalPackage =
+        drv overrideAttrs args;
+
+    in finalPackage;
+
+  #makeDerivationExtensibleConst = attrs: makeDerivationExtensible (_: attrs);
+  # but pre-evaluated for a slight improvement in performance.
+  bar = attrs:
+   drv
+      (f0:
+        let
+          f = self: super:
+            let x = f0 super;
+            in
+              if builtins.isFunction x
+              then
+                f0 self super
+              else x;
+        in
+          foo (self: attrs // (if builtins.isFunction f0 || f0?__functor then f self attrs else f0)))
+      attrs;
+      in
+  fnOrAttrs:
+    if builtins.isFunction fnOrAttrs
+    then foo fnOrAttrs
+    else bar fnOrAttrs;
+
+
 }

@@ -24,14 +24,12 @@ buildGoModule rec {
     "-X 'main.version=${version}'"
   ];
 
-  # used at runtime, but not installed by default
   postInstall = ''
     mv $out/bin/cli $out/bin/spicetify
     ln -s $out/bin/spicetify $out/bin/spicetify-cli
-    cp -r ${src}/jsHelper $out/bin/jsHelper
-    cp -r ${src}/CustomApps $out/bin/CustomApps
-    cp -r ${src}/Extensions $out/bin/Extensions
-    cp -r ${src}/Themes $out/bin/Themes
+
+    # Used at runtime, but not installed by default
+    cp -r ${src}/{jsHelper,CustomApps,Extensions,Themes} $out/bin/
   '';
 
   doInstallCheck = true;
@@ -41,11 +39,10 @@ buildGoModule rec {
 
   passthru.tests.version = testers.testVersion { package = spicetify-cli; };
 
-  meta = with lib; {
+  meta = {
     description = "Command-line tool to customize Spotify client";
-    homepage = "https://github.com/spicetify/cli";
-    license = licenses.gpl3Plus;
-    maintainers = with maintainers; [
+    license = lib.licenses.gpl3Plus;
+    maintainers = with lib.maintainers; [
       jonringer
       mdarocha
     ];

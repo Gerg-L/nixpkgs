@@ -186,27 +186,6 @@ fn copy_file<
 
     if let Ok(Object::Elf(e)) = Object::parse(&contents) {
         add_dependencies(source, e, &contents, &dlopen, queue)?;
-
-        // Make file writable to strip it
-        let mut permissions = fs::metadata(&target)
-            .wrap_err_with(|| format!("failed to get metadata for {:?}", target))?
-            .permissions();
-        permissions.set_readonly(false);
-        fs::set_permissions(&target, permissions)
-            .wrap_err_with(|| format!("failed to set readonly flag to false for {:?}", target))?;
-
-        // Strip further than normal
-        if let Ok(strip) = env::var("STRIP") {
-            if !Command::new(strip)
-                .arg("--strip-all")
-                .arg(OsStr::new(&target))
-                .output()?
-                .status
-                .success()
-            {
-                println!("{:?} was not successfully stripped.", OsStr::new(&target));
-            }
-        }
     };
 
     Ok(())

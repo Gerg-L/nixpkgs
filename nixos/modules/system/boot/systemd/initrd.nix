@@ -131,7 +131,6 @@ let
   initialRamdisk = pkgs.makeInitrdNG {
     name = "initrd-${kernel-name}";
     inherit (config.boot.initrd) compressor compressorArgs prepend;
-    inherit (cfg) strip;
 
     contents = lib.filter ({ source, ... }: !lib.elem source cfg.suppressedStorePaths) cfg.storePaths;
   };
@@ -205,19 +204,6 @@ in
       '';
       type = utils.systemdUtils.types.initrdStorePath;
       default = [ ];
-    };
-
-    strip = mkOption {
-      description = ''
-        Whether to completely strip executables and libraries copied to the initramfs.
-
-        Setting this to false may save on the order of 30MiB on the
-        machine building the system (by avoiding a binutils
-        reference), at the cost of ~1MiB of initramfs size. This puts
-        this option firmly in the territory of micro-optimisation.
-      '';
-      type = types.bool;
-      default = true;
     };
 
     extraBin = mkOption {
@@ -386,6 +372,15 @@ in
       description = "Definition of slice configurations.";
     };
   };
+
+  imports = [
+    (lib.mkRemovedOptionModule [
+      "boot"
+      "initrd"
+      "systemd"
+      "strip"
+    ] "'boot.initrd.systemd.strip' has been removed as it was nearly pointless")
+  ];
 
   config = mkIf (config.boot.initrd.enable && cfg.enable) {
     assertions =

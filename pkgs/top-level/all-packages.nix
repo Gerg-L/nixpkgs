@@ -77,8 +77,14 @@ with pkgs;
   gccStdenvNoLibs = mkStdenvNoLibs gccStdenv;
   clangStdenvNoLibs = mkStdenvNoLibs clangStdenv;
 
-  # For convenience, allow callers to get the path to Nixpkgs.
+  # For convenience:
+
+  # Allow callers to get the path to Nixpkgs.
   path = ../..;
+
+  # Allow callers to get system
+  inherit (stdenv.hostPlatform) system;
+
 
   ### Helper functions.
   inherit lib config overlays;

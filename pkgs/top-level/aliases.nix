@@ -1589,7 +1589,6 @@ mapAliases {
   zplugin = throw "'zplugin' has been renamed to/replaced by 'zinit'"; # Converted to throw 2024-10-17
   zyn-fusion = zynaddsubfx; # Added 2022-08-05
 
-  inherit (stdenv.hostPlatform) system; # Added 2021-10-22
   inherit (stdenv) buildPlatform hostPlatform targetPlatform; # Added 2023-01-09
 
   freebsdCross = freebsd; # Added 2024-09-06
